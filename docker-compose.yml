@@ -1,0 +1,10 @@
+version: "3"
+services:
+     rabbit_mq_server:
+        image: rabbitmq:3-management
+        hostname: rabbit_mq_server
+        ports:
+        - 15672:15672
+        volumes:
+        - ./LOGS/:/var/log/rabbitmq/
+        - ./etc/:/etc/rabbitmq/
