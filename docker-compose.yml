@@ -1,10 +1,53 @@
 version: "3"
 services:
-     rabbit_mq_server:
-        image: rabbitmq:3-management
-        hostname: rabbit_mq_server
+     rabbitmq:
+        image: rohansharma22/rabbitmq_local:latest
+        networks:
+        - rabbitmqnetwork
         ports:
         - 15672:15672
+        - 5672:5672
         volumes:
         - ./LOGS/:/var/log/rabbitmq/
         - ./etc/:/etc/rabbitmq/
+        healthcheck:
+            test: ["CMD", "curl", "-f", "http://localhost:15672"]
+            interval: "30s"
+            timeout: "10s"
+            retries: 5
+     fileuploadserver:
+        image: file_upload_server:upload-server-docker
+        env_file:
+            - 'variables.env'
+        depends_on:
+            rabbitmq:
+                condition: service_healthy
+        networks:
+        - rabbitmqnetwork
+        ports:
+        - 8081:8080
+     fileprocessingclient_text:
+        image: file_processing_client:processing-client-docker
+        env_file:
+            - 'variables.env'
+        environment:
+            - type=PLAIN
+        depends_on:
+          rabbitmq:
+                condition: service_healthy
+        networks:
+        - rabbitmqnetwork
+     fileprocessingclient_csv:
+        image: file_processing_client:processing-client-docker
+        env_file:
+            - 'variables.env'
+        environment:
+            - type=CSV
+        depends_on:
+          rabbitmq:
+                condition: service_healthy
+        networks:
+        - rabbitmqnetwork
+networks:
+    rabbitmqnetwork:
+             driver: bridge
